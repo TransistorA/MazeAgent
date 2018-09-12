@@ -1,0 +1,3 @@
+The Roomba implementation consists of 1. a clean_cell function to clean dirty cell 2. a forward_rsearch function to let Roomba go forward specific distance. The distance increases as the number of turns increases in a spiral pattern 2. a left_rsearch function to let Roomba turn left 90 degrees, switch into the next turn in a spiral pattern 3. two wall_rsearch functions to help Roomba do wall tracing, bouncing, and then back to spiral pattern when it hits a wall ahead. The two functions take different wall tracing length and different number of turns in initial spiral strategy to prevent it from circling in same area.
+
+To run the agent, we need to put the code file under Python ACT-R Library directory and then run the code.
