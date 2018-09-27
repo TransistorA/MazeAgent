@@ -44,7 +44,6 @@ class NeuralMMAgent(object):
         self.activation_function = self.sigmoid_af
 
         # values to be set
-        self.theta_list = []
         self.input_list = []
         self.output_list = []
 
@@ -64,6 +63,14 @@ class NeuralMMAgent(object):
             output_weight.append(random.uniform(-.5, .5))
         weight_list.append(output_weight)
         self.weight_list = weight_list
+
+        # Generate initial thetas of all zeros
+        theta_list = [[0] * self.num_in_nodes]
+        for i in range(self.num_hid_layers):
+            hidden_theta = [0] * self.num_hid_nodes
+            theta_list.append(hidden_theta)
+        theta_list.append([0] * self.num_out_nodes)
+        self.theta_list = theta_list
 
     def train_net(self, input_list, output_list, max_num_epoch=100000, max_sse=0.1):
         """ Trains neural net using incremental learning
@@ -102,6 +109,7 @@ class NeuralMMAgent(object):
 
                 if i == 0 and num_epoch == 0:
                     print("The weights after 1st step for input [1,0] are ", self.weight_list)
+                    print("The weight deltas are ", previous_weight_deltas)
                     print("And the outputs are ", neuron_value_list)
 
             total_err = total_err / len(input_list)
@@ -148,6 +156,8 @@ class NeuralMMAgent(object):
 
     def calculate_output(self, input_values):  # output the values of all neurons according to the input and weights
         assert len(input_values) == self.num_in_nodes, "Illegal number of input or output"
+        assert len(self.theta_list) == self.num_hid_layers + 2 and len(self.theta_list[0]) == self.num_in_nodes and \
+               len(self.theta_list[-1]) == self.num_out_nodes, "Illegal number of thetas for input or output layer"
         neuron_value_list = [input_values]
         for i in range(len(self.weight_list)-1):  # number of hidden layers
             hidden_layer = []
@@ -155,7 +165,7 @@ class NeuralMMAgent(object):
                 neuron_value = 0  # calculate value of each hidden node
                 for k in range(len(neuron_value_list[i])): # number of nodes in previous layer
                     neuron_value += neuron_value_list[i][k] * self.weight_list[i][self.num_hid_nodes * k + j]
-                hidden_layer.append(self.activation_function(neuron_value))
+                hidden_layer.append(self.activation_function(neuron_value - self.theta_list[i + 1][j]))  # g(sum(xw) - theta)
             neuron_value_list.append(hidden_layer)
 
         output_layer = []  # calculate the output layer
@@ -229,7 +239,12 @@ class NeuralMMAgent(object):
                     weight_deltas[0][i * self.num_out_nodes + j] = weight_change
         return weight_deltas
 
-    def update_weights(self, neuron_value_list, errors, previous_weight_deltas):
+    def update_weights(self, neuron_value_list, errors, previous_weight_deltas):  # Update weights and thetas
+        # Update the thetas
+        for i in range(self.num_hid_layers + 1):  # the number of layers expect the input layer
+            for j in range(len(self.theta_list[i + 1])):  # the number of nodes in each layer
+                self.theta_list[i + 1][j] -= self.learning_rate * errors[i][j]  # delta theta(j) = -alpha * error(j)
+
         if self.num_hid_layers >= 1:
             # update the weights between input and 1st hidden layer
             for i in range(self.num_in_nodes):
@@ -249,6 +264,7 @@ class NeuralMMAgent(object):
                     for j in range(self.num_hid_nodes):
                         weight_change = self.learning_rate * neuron_value_list[k+1][i] * errors[k+1][j]
                         self.weight_list[k+1][i * self.num_hid_nodes + j] += weight_change + self.momentum * previous_weight_deltas[k+1][i * self.num_hid_nodes + j]
+
         else:  # there is no hidden layer
             for i in range(self.num_in_nodes):
                 for j in range(self.num_out_nodes):
@@ -272,10 +288,14 @@ class NeuralMMAgent(object):
         return 1 - sig_output
 
 
-test_agent = NeuralMMAgent(2, 2, 1, 1, random_seed=5, max_epoch=100000, learning_rate=0.2, momentum=0.7)
+test_agent = NeuralMMAgent(2, 2, 2, 1, random_seed=5, max_epoch=100000, learning_rate=0.2, momentum=0.7)  # Network with 2 hidden layers
+
+# We can comment the previous line and uncomment the next 3 lines to test the in class set of weights
+#test_agent = NeuralMMAgent(2, 2, 1, 1, random_seed=5, max_epoch=100000, learning_rate=0.2, momentum=0.7)  # Network with 1 hidden layer
+#test_agent.set_weights([[-.37, .26, .1, -.24], [-.01, -.05]])  # We can comment out this line to generate random weights
+#test_agent.set_thetas([[0, 0], [0, 0], [0]])
+
 test_in = [[1, 0], [0, 0], [1, 1], [0, 1]]
 test_out = [[1], [0], [0], [1]]
-test_agent.set_weights([[-.37, .26, .1, -.24], [-.01, -.05]])  # We can comment out this line to generate random weights
-test_agent.set_thetas([[0, 0], [0, 0], [0]])
-test_agent.train_net(test_in, test_out, max_sse=test_agent.max_sse, max_num_epoch=test_agent.max_epoch)
 
+test_agent.train_net(test_in, test_out, max_sse=test_agent.max_sse, max_num_epoch=test_agent.max_epoch)
