@@ -67,7 +67,7 @@ class MazeAgent(object):
             x, y = path[-1]
             if grid[x][y] == goal:
                 command = self.getCommand(path)
-                return command
+                return command[::-1]  # # Reverse the command because MazeSim uses last command first
             for x2, y2 in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
                 if 0 <= x2 < height and 0 <= y2 < width and grid[x2][y2] != wall and (
                 x2, y2) not in self.__explored_set:
