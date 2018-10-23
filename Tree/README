@@ -1,0 +1,18 @@
+Annan Miao
+
+Since I still did not have Malmo set up successfully, I cannot test my MazeAgent program with the Minecraft environment. Instead I can only test it with simple 2-d matrices. For a 3 * 3 matrix, the run time for breadth-first algorithm is 0.0004987716674804688s, and is 0.0004982948303222656s for A* Search algorithm. The time complexity for breadth-first algorithm is O(V+E)/O(B^D) and the complexity for A* search extremely depends on the structure of graph and the heuristic function to use.
+
+A* Search is a powerful heuristic path finding approach and it can be widely used in various areas. I think it can be expanded by setting multiple equivalent goals and then identifying the optimal path, determining whether or not there will be a feasible solution to the path finding problem in specific circumstances, and analyzing the best heuristic function to use for different kinds of environments.
+
+
+The MazeAgent consists of 
+
+1. a getStartpoint and a getGoalpoint function to find the locations of start and goal points.
+
+2. a getCommand function to transfer the path into commands.
+
+3. a getHeuristics function for the A* Search Algorithm. In this case I use the sum of absolute values of vertical and horizontal distances to the goal point as h(x).
+
+4. the get_path, __plan_path_breadth and __plan_path_astar functions required.
+
+Since I did not setup Malmo successfully and I tested the program with 2-d list only, it is highly possible that there would be error when running the MazeSim program. I would go to office hour for help and further test and debug potential problems.
