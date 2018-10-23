@@ -1,5 +1,7 @@
 import collections
 
+#Annan Miao
+#Reference https://eddmann.com/posts/depth-first-search-and-breadth-first-search-in-python/
 
 class MazeAgent(object):
     '''
@@ -151,11 +153,3 @@ class MazeAgent(object):
             return self.__plan_path_breadth()
         elif self.pathmethod == "astar":
             return self.__plan_path_astar()
-
-
-a = MazeAgent(None, "bf")
-a.set_grid([[3, 1, 2], [1, 1, 1], [1, 1, 1]])
-print([3, 1, 2])
-print([1, 1, 1])
-print([1, 1, 1])
-a.get_path()
