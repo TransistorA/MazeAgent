@@ -1,7 +1,9 @@
 import collections
+import queue
 
 #Annan Miao
 #Reference https://eddmann.com/posts/depth-first-search-and-breadth-first-search-in-python/
+#Reference https://www.redblobgames.com/pathfinding/a-star/implementation.html
 
 class MazeAgent(object):
     '''
@@ -25,6 +27,10 @@ class MazeAgent(object):
         return self.__explored_set
 
     def get_fset(self):
+        a = queue.PriorityQueue()
+        if type(self.__frontier_set) == type(a):
+            # In A* search the frontier set is a priority queue, we need to transfer it into a queue
+            return self.__frontier_set.queue
         return self.__frontier_set
 
     def get_goal(self):
@@ -60,7 +66,7 @@ class MazeAgent(object):
         height = len(grid)
         width = len(grid[0])
 
-        self.__frontier_set = collections.deque([[start]])
+        self.__frontier_set = collections.deque([[start]])  # Set the frontier set to be a queue
         self.__explored_set = set([start])
         while self.__frontier_set:
             path = self.__frontier_set.popleft()
@@ -74,6 +80,7 @@ class MazeAgent(object):
                     self.__frontier_set.append(path + [(x2, y2)])
                     self.__explored_set.add((x2, y2))
 
+
     def __plan_path_astar(self):
         '''A* tree search'''
         goal = 3
@@ -83,33 +90,21 @@ class MazeAgent(object):
         height = len(grid)
         width = len(grid[0])
         heuristic = self.getHeuristics()
-
-        self.__frontier_set = collections.deque([[start]])
+        
+        self.__frontier_set = queue.PriorityQueue()  # Set the frontier set to be a priority queue
+        self.__frontier_set.put([start], heuristic[start[0]][start[1]])
         self.__explored_set = set([start])
         while self.__frontier_set:
-            path = self.__frontier_set.popleft()
+            path = self.__frontier_set.get()  # the priority queue would output the element with highest priority, in this case the min value of distance from goal
             x, y = path[-1]
-            if grid[x][y] == goal:  # At the goal point
+            if grid[x][y] == goal:
                 command = self.getCommand(path)
-                return command
-
-            neibourset = []  # Clear the set after every move
-            heuset = []
+                return command[::-1]  # # Reverse the command because MazeSim uses last command first
             for x2, y2 in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
                 if 0 <= x2 < height and 0 <= y2 < width and grid[x2][y2] != wall and (
                 x2, y2) not in self.__explored_set:
-                    neibourset.append([x2, y2])
-                    heuset.append(heuristic[x2][y2])  # a set of heuristics of all elements in the frontier set
-
-            # Find the minimal heuristics
-            minheu = heuset[0]
-            minheuIndex = 0
-            for i in range(len(heuset)):
-                if heuset[i] < minheu:
-                    minheuIndex = i
-            x2, y2 = neibourset[minheuIndex]  # The next move with minimal heuristics value
-            self.__frontier_set.append(path + [(x2, y2)])
-            self.__explored_set.add((x2, y2))
+                    self.__frontier_set.put(path + [(x2, y2)], heuristic[x2][y2])
+                    self.__explored_set.add((x2, y2))
 
     def getCommand(self, path):
         # Input the path (cosisting of locations in grid) and output the corresponding commands
@@ -130,12 +125,16 @@ class MazeAgent(object):
     def getHeuristics(self):
         # Calculate the heuristics by the distance from the current cell to the goal
         grid = self.__grid
+        height = len(grid)
+        width = len(grid[0])
+        
         x, y = self.getGoalpoint()
         heuristics = []
         for i in range(len(grid)):
             heuristics.append([])
             for j in range(len(grid[0])):
-                heuristics[i].append(abs(i - x) + abs(j - y))
+                # Since we use priorit queue in astar search, the h(x) is larger when it is closer to the goal
+                heuristics[i].append(height + width - abs(i - x) - abs(j - y))
         return heuristics
 
     def get_path(self):
